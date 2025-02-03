@@ -16,3 +16,4 @@ The purpose of this project is to create a **reliable and resilient network** us
 - **Cisco Switches**  
 
 ** Image **
+![HSRP Network Topology](HSRP.png)
