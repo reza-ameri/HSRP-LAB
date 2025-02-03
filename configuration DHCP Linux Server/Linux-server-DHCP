@@ -1,0 +1,108 @@
+DHCP Server:
+
+DHCP Discover:
+    source address:       0.0.0.0
+    destination address:  255.255.255.255
+    MAC address:          00:50:79:66:68:0c
+************************************************ 
+DHCP Offer:
+    source address:       172.20.16.33
+    destination address:  255.255.255.255
+    MAC address:          00:50:79:66:68:0c
+    your IP address:       172.20.16.40
+************************************************
+DHCP Request:
+    source address:       0.0.0.0
+    destination address:  255.255.255.255
+    MAC address:          00:50:79:66:68:0c
+    server IP:            172.20.20.2
+    requested IP address: 172.20.16.40
+************************************************
+DHCP ACK:
+    source address:       172.20.16.33
+    destination address:  255.255.255.255
+    MAC address:          3C-97-0E-EA-B5-CE
+    your IP address:      172.20.16.40
+
+
+-------------------
+ubuntu:
+apt-get update
+apt-cache search server | grep -i dhcp
+apt-get install -y isc-dhcp-server
+cd /etc/dhcp/
+ls
+vi /etc/default/isc-dhcp-server
+[LINE 17, CHANGE]
+INTERFACESv4="eth0"
+
+vi /etc/dhcp/dhcpd.conf
+# dhcpd.conf
+# This Configuration Deployed by Reza Ameri
+# Date of Create: Monday, 3 February 2025
+subnet 172.20.20.2 netmask 255.255.255.255 {
+  authoritative;
+}
+
+## VLAN 200 RANGE ##
+subnet 172.20.16.0 netmask 255.255.255.224 {
+ authoritative;
+ option routers 172.20.60.1;
+ option subnet-mask 255.255.255.224;
+ option domain-name-servers 8.8.8.8 , 4.2.2.4 ;
+ default-lease-time 86400;
+ max-lease-time 86400;
+ host pc-1 {
+   hardware ethernet 00:50:79:66:68:24;
+   fixed-address 172.20.16.15;
+ }
+}
+## VLAN 201 RANGE ##
+subnet 172.20.16.32 netmask 255.255.255.224 {
+ authoritative;
+ option routers 172.20.60.33;
+ option subnet-mask 255.255.255.224;
+ option domain-name-servers 8.8.8.8 , 4.2.2.4 ;
+ default-lease-time 86400;
+ max-lease-time 86400;
+ host pc-2 {
+   hardware ethernet 00:50:79:66:68:0c;
+   fixed-address 172.20.16.40;
+ }
+}
+## VLAN 202 RANGE ##
+subnet 172.20.16.64 netmask 255.255.255.224 {
+ authoritative;
+ option routers 172.20.60.65;
+ option subnet-mask 255.255.255.224;
+ option domain-name-servers 8.8.8.8 , 4.2.2.4 ;
+ default-lease-time 86400;
+ max-lease-time 86400;
+ host pc-3 {
+   hardware ethernet 00:50:79:66:68:07;
+   fixed-address 172.20.16.75;
+ }
+}
+## VLAN 203 RANGE ##
+subnet 172.20.16.96 netmask 255.255.255.224 {
+ authoritative;
+ option routers 172.20.60.97;
+ option subnet-mask 255.255.255.224;
+ option domain-name-servers 8.8.8.8 , 4.2.2.4 ;
+ default-lease-time 86400;
+ max-lease-time 86400;
+ host pc-4 {
+   hardware ethernet 00:50:79:66:68:08;
+   fixed-address 172.20.16.105;
+ }
+}
+systemctl restart isc-dhcp-server
+
+netstat -ntulp | grep :67
+
+cat /var/lib/dhcp/dhcpd.leases
+
+vim /etc/sysctl/conf
+uncommend  net.ipv4.ip.forward=1
+
+
