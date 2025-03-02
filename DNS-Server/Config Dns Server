@@ -1,1 +1,80 @@
+Scenario: Setting Up an Internal DNS Server for lab.local and Testing with Windows 7
+In this scenario, I set up an internal DNS server to manage the domain lab.local. The goal was to allow internal network systems to communicate using domain names instead of IP addresses, making the internal network more efficient and manageable. Additionally, the DNS server also has access to the internet to resolve external domains as needed.
 
+Installing Packages in Linux
+To install packages in different Linux distributions, the appropriate package manager is used. Here are the methods for installing packages on various distributions:
+
+1. Installing Packages on Debian/Ubuntu:
+First, update the package lists:
+
+
+sudo apt update
+Then, install the desired package (e.g., BIND for setting up a DNS server):
+sudo apt install bind9
+
+2. Installing Packages on CentOS/RedHat:
+Install the package using yum or dnf:
+sudo yum install bind
+or on newer versions:
+sudo dnf install bind
+
+Steps Taken:
+1️⃣ Setting up the DNS Server
+I installed and configured BIND9 on a Linux server to act as the authoritative DNS server for the lab.local domain. This configuration allows internal devices to resolve names without relying on external DNS servers.
+
+I configured the named.conf file to define the domain lab.local.
+The server was set up to forward external DNS queries to public DNS servers (like Google's 8.8.8.8).
+
+2️⃣ DNS Configuration in BIND
+The BIND configuration was done in the named.conf.options file to control how the DNS server handles queries:
+
+
+acl LAN {
+    172.20.20.0/24;
+    172.20.16.0/24;
+};
+
+options {
+    directory "/var/cache/bind";  # Location for caching DNS responses
+    max-cache-size 64m;
+    max-cache-ttl 3600;
+    
+    dnssec-enable yes;  # Enables DNSSEC for response validation
+    dnssec-validation auto;  # Enables automatic DNSSEC validation
+
+    allow-query { localhost; LAN; };  # Restricting queries to internal network
+    forwarders {
+        8.8.8.8;  # Google Public DNS for external queries
+    };
+    allow-recursion { LAN; };  # Only allow internal network clients to query recursively
+
+    auth-nxdomain no;  # Prevents returning NXDOMAIN for non-existent domains
+    listen-on-v6 { LAN; };  # Listen for IPv6 queries on the internal network
+};
+
+Explanation:
+DNSSEC: The dnssec-enable yes and dnssec-validation auto configurations ensure DNS responses are validated for authenticity.
+Access Control: The allow-query { localhost; LAN; }; line restricts DNS queries to local and internal clients only.
+Forwarding External Queries: The server forwards any external queries to Google’s DNS server (8.8.8.8) for resolution.
+This setup allows internal devices to resolve internal domain names and also access external domains as required.
+
+3️⃣ Configuring DNSSEC for Security
+To add an extra layer of security, I enabled DNSSEC (Domain Name System Security Extensions). This protects against DNS spoofing by ensuring that DNS responses are authentic.
+
+The dnssec-enable yes; setting enables DNSSEC.
+The dnssec-validation auto; setting automatically validates DNS responses to ensure they are legitimate.
+
+4️⃣ DHCP Configuration to Automatically Assign DNS
+To simplify client configurations, I set up a DHCP server on the network that automatically assigns the DNS server IP to clients. This eliminates the need for manual DNS configuration on each client device.
+
+Example DHCP Configuration (ISC DHCP Server):
+
+subnet 172.20.16.0 netmask 255.255.255.0 {
+    range 172.20.16.100 172.20.16.200;
+    option routers 172.20.16.1;
+    option domain-name "lab.local";
+    option domain-name-servers 172.20.16.1;
+}
+Explanation:
+DHCP assigns the DNS server IP (172.20.16.1) to clients along with their IP addresses, making the setup process seamless for the clients.
+Clients automatically use the DNS server configured in the DHCP setup, which makes the network management easier
