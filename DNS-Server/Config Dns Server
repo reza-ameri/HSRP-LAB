@@ -18,6 +18,87 @@ sudo yum install bind
 or on newer versions:
 sudo dnf install bind
 
+1. named.conf Configuration:
+This is the main configuration file for BIND9, where various settings related to the DNS server, zones, and how requests are handled are specified.
+
+Zone Definitions:
+
+zone "lab.local" IN {
+      type master;
+      file "/etc/bind/db.lab.local";
+};
+
+zone "mysitelocal.org" IN {
+      type master;
+      file "/etc/bind/db.mysitelocal.org";
+};
+
+zone "lab.local" IN { ... }: This section configures the lab.local domain. It specifies that the DNS server is the master for this domain, and it references the file /etc/bind/db.lab.local, which contains the DNS records for this domain.
+
+zone "mysitelocal.org" IN { ... }: Similarly, this section configures the mysitelocal.org domain. It is also configured as the master, and the records for this domain are stored in the /etc/bind/db.mysitelocal.org file.
+
+Explanation of Records in the Zone Files:
+Each domain (lab.local and mysitelocal.org) has records defined in the corresponding zone files, such as /etc/bind/db.lab.local and /etc/bind/db.mysitelocal.org.
+
+Zone File db.lab.local:
+
+$TTL    604800
+@       IN      SOA     lab.local. root.lab.local. (
+                            6           ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+;
+@       IN      NS      bindserver.lab.local.
+bindserver.lab.local.   IN      A       172.20.20.3
+dhcp-server     IN      A       172.20.20.2
+samba-server    IN      A       10.10.0.10
+mailserver      IN      MX     10    10.10.0.1
+
+SOA Record (Start of Authority): This record defines the authoritative information for the domain. It includes details like the version of the zone file, refresh times, and negative cache TTL.
+
+lab.local.: The domain name.
+root.lab.local.: The email address of the domain administrator.
+Serial: The version number of the zone file, which should be incremented whenever the zone file is updated.
+NS Record: The NS record specifies the authoritative DNS server for the lab.local domain. In this case, it is bindserver.lab.local..
+
+A Records: These records map hostnames to IP addresses.
+
+bindserver.lab.local. resolves to IP 172.20.20.3.
+dhcp-server resolves to IP 172.20.20.2.
+samba-server resolves to IP 10.10.0.10.
+MX Record: The MX record specifies the mail server for the domain. Here, the mail server mailserver is located at 10.10.0.1 with a priority of 10.
+
+Zone File db.mysitelocal.org:
+
+$TTL    604800
+@       IN      SOA     mysitelocal.org. root.mysitelocal.org. (
+                           4            ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+;
+@       IN      NS      wb.mysitelocal.org.
+wb      IN      A       172.20.20.4
+
+
+Similar to the db.lab.local file, this file contains SOA, NS, and A records:
+SOA Record: Provides authoritative information for the mysitelocal.org domain.
+NS Record: Specifies the authoritative server for the mysitelocal.org domain, which is wb.mysitelocal.org..
+A Record: Maps the wb hostname to the IP address 172.20.20.4
+
+2. DNS Server Zone File Configuration:
+In both configurations, the server is set up as the master for each domain. The zone files specify the DNS records for the respective domains, and the server uses these records to respond to DNS queries for those domains.
+
+3. Key Points:
+bindserver.lab.local. is the authoritative DNS server for both domains.
+The DNS server is set up as the main resolver for hostname resolution for both domains within the internal network.
+The A Records, MX Records, and NS Records allow internal systems and services to resolve names instead of IP addresses.
+
+
+
 Steps Taken:
 1️⃣ Setting up the DNS Server
 I installed and configured BIND9 on a Linux server to act as the authoritative DNS server for the lab.local domain. This configuration allows internal devices to resolve names without relying on external DNS servers.
@@ -58,23 +139,67 @@ Access Control: The allow-query { localhost; LAN; }; line restricts DNS queries 
 Forwarding External Queries: The server forwards any external queries to Google’s DNS server (8.8.8.8) for resolution.
 This setup allows internal devices to resolve internal domain names and also access external domains as required.
 
-3️⃣ Configuring DNSSEC for Security
-To add an extra layer of security, I enabled DNSSEC (Domain Name System Security Extensions). This protects against DNS spoofing by ensuring that DNS responses are authentic.
-
-The dnssec-enable yes; setting enables DNSSEC.
-The dnssec-validation auto; setting automatically validates DNS responses to ensure they are legitimate.
-
-4️⃣ DHCP Configuration to Automatically Assign DNS
-To simplify client configurations, I set up a DHCP server on the network that automatically assigns the DNS server IP to clients. This eliminates the need for manual DNS configuration on each client device.
 
 Example DHCP Configuration (ISC DHCP Server):
 
-subnet 172.20.16.0 netmask 255.255.255.0 {
-    range 172.20.16.100 172.20.16.200;
-    option routers 172.20.16.1;
-    option domain-name "lab.local";
-    option domain-name-servers 172.20.16.1;
+## VLAN 200 RANGE ##
+subnet 172.20.16.0 netmask 255.255.255.224 {
+ authoritative;
+ option routers 172.20.60.1;
+ option subnet-mask 255.255.255.224;
+ option domain-name-servers 172.20.20.3;
+ default-lease-time 86400;
+ max-lease-time 86400;
+
+ host pc-1 {
+   hardware ethernet 00:50:79:66:68:24;
+   fixed-address 172.20.16.15;
+ }
+ host win {
+   hardware ethernet 50:f3:fc:00:27:01;
+   fixed-address 172.20.16.16;
 }
-Explanation:
-DHCP assigns the DNS server IP (172.20.16.1) to clients along with their IP addresses, making the setup process seamless for the clients.
-Clients automatically use the DNS server configured in the DHCP setup, which makes the network management easier
+
+
+Testing with Windows 7 Client
+To verify that the DNS server works as expected, I tested it using a Windows 7 client. I used the nslookup command to check if the DNS server resolves both internal and external domains:
+
+nslookup dhcp-server.lab.local 
+Server:		172.20.20.3
+Address:	172.20.20.3#53
+
+dhcp-server.lab.local 
+172.20.20.2
+
+Expected Result:
+The correct IP address for example.lab.local should be returned, indicating that internal name resolution is working.
+
+For external domains, such as google.com, I also tested:
+
+nslookup google.com 
+
+Address:	172.20.20.3
+Address:	172.20.20.3#53
+
+Non-authoritative answer:
+Name:	google.com
+Address: 216.58.206.78
+Name:	google.com
+Address: 2a00:1450:4001:81d::200e
+
+This confirms that the server can forward external queries properly to the Google DNS server (8.8.8.8).
+
+Firewall Configuration on Router
+To enhance the security, I configured firewall rules on the router to restrict traffic:
+
+Allow DNS traffic (Port 53) for clients to query the DNS server.
+Allow HTTPS traffic (Port 443) for internet access.
+Allow DHCP traffic for clients to receive IP addresses.
+The firewall rules ensure that only necessary traffic is allowed while protecting the internal network.
+
+Conclusion:
+I set up an internal DNS server to handle lab.local domain resolutions on a Linux server.
+The server can resolve both internal domain names and external domains.
+The DHCP server automatically assigns the DNS server IP to clients.
+DNSSEC was enabled to secure DNS responses.
+Firewall rules on the router were configured to allow only necessary traffic (DNS, HTTPS, and DHCP).
