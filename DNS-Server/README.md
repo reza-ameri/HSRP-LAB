@@ -13,9 +13,13 @@ Example configuration for forwarders:
 bash
 Copy
 Edit
+
+
 forwarders {
     8.8.8.8;  # Google DNS server
 };
+
+
 Testing the DNS Server: After configuring the server, I tested it using a Windows 7 machine. The Windows 7 machine was set to use the internal DNS server for resolving both lab.local domain names and external domains. I verified that:
 
 The DNS server successfully resolved local network names like pc1.lab.local.
