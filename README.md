@@ -16,7 +16,7 @@ The purpose of this project is to create a **reliable and resilient network** us
 - **Cisco Switches**  
 
 ** Image **
-![HSRP Network Topology](Image/HSRP.png)
+![HSRP Network Topology](Image/mainimage.png)
 
 📈 Test Results
 This project is used to test the HSRP functionality and its failover capability. In case of a Switch failure, HSRP should failover to the second router, and the default IP address for clients should remain consistent.
