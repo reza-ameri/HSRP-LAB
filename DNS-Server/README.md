@@ -25,3 +25,4 @@ Testing the DNS Server: After configuring the server, I tested it using a Window
 The DNS server successfully resolved local network names like pc1.lab.local.
 The DNS server also resolved external domains like google.com by forwarding the queries to external DNS servers.
 With this configuration, I was able to set up an internal DNS server that supports resolving both internal domain names and external domains, providing seamless access to both internal and external resources.
+![Image DNS Server](image/Image DNS Server.png)
