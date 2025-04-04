@@ -2,13 +2,20 @@ This project is designed for the implementation and testing of **Hot Standby Rou
 The purpose of this project is to create a **reliable and resilient network** using HSRP to enhance **accessibility and flexibility** in organizational networks.
 
 ## 🎯 Project Objectives  
-- Configure **HSRP** between multiple routers to improve **network stability** and **availability**  
-- Test **failover** and **recovery** in case of router failure
+- Project Objectives
+- Configure HSRP between multiple routers to improve network stability and availability
+
+- Test Failover and recovery in case of router failure
+  
+- Use dhcp server linux to assign ip add to client
+and dns server for domain resolution and managing various types of DNS records.
 
 - ## 🔧 Features
-- Topology includes two **switch-core** configured with HSRP  
-- Use of **Linux DHCP Server** for IP address allocation    
-- Fully tested scenario with attention to potential errors and various tests
+- The topology consists of two **core switches** configured with HSRP and a router as the network edge, one of which is the client network and the other is the server, and the other is the WAN container, 
+    which is used for the Internet clients using NAT ACL and full control is placed on the LAN network.
+- Using **Linux DHCP Server** to assign IP addresses
+- Using **Linux BIND Server** for name resolution and client access to public sites with BIND SERVER
+- Fully tested scenario with regard to possible errors and various tests
 
 - ## 🛠️ Technologies
 - **HSRP (Hot Standby Routing Protocol)**
