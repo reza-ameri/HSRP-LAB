@@ -10,10 +10,12 @@ The purpose of this project is to create a **reliable and resilient network** us
 - Use of **Linux DHCP Server** for IP address allocation    
 - Fully tested scenario with attention to potential errors and various tests
 
-- ## 🛠️ تکنولوژی‌ها
-- **HSRP**  
-- **Linux DHCP Server**  
-- **Cisco Switches**  
+- ## 🛠️ Technologies
+- **HSRP (Hot Standby Routing Protocol)**
+- **Linux DHCP Server**
+- **Linux Bind Server**
+- **Cisco Switches**
+- **Cisco Routing**
 
 ** Image **
 ![HSRP Network Topology](Image/mainimage.png)
